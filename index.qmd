@@ -76,80 +76,10 @@ Let's see a random illustration with one file from Bacton, with an example for m
 
 I have done the same with the $N_2 O$ reference spectrum in @fig-bacton-n2o, and the results are also fairly similar and equally puzzling....
 
+{{< embed notebooks/inversion_plots.qmd#fig-bacton-ch4 >}}
 
-```{python}
-# | label: fig-bacton-ch4
-# | fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $CH_4$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
-# | echo: false
+{{< embed notebooks/inversion_plots.qmd#fig-baction-n20 >}}
 
-from matched_filter import match_filter_image
-import matplotlib.pyplot as plt
-
-telops_fname = (
-    "/home/jose/data/TELOPS_UK/"
-    + "2_Bacton_M_1200/2_Bacton_M_1200_Data_20240625_122135513.radiance.sc"
-)
-reference_fname = "/home/jose/data/TELOPS_UK/CH4_ref_spectra_subsampled.csv"
-matched_filter, clusters, params = match_filter_image(
-    telops_fname, reference_fname, 10, 4, retval_all=True
-)
-fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8, 7))
-axs = axs.flatten()
-
-im = axs[0].imshow(matched_filter, cmap="magma")
-fig.subplots_adjust(right=0.75)
-cbar_ax = fig.add_axes([0.8, 0.55, 0.03, 0.35])
-
-# Add a colorbar to the subplot
-cbar = plt.colorbar(im, cax=cbar_ax)
-axs[0].set_title("CH4 matched filter")
-axs[1].plot(params["wv"], params["ref_signal"], "-", lw=2, label="Ref signal")
-ax2 = axs[1].twinx()
-for cluster in range(4):
-    ax2.plot(
-        params["wv"], params["filter"][cluster], "-", label=f"Clust {cluster}"
-    )
-# Add legends to the plot
-lines, labels = axs[1].get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-ax2.legend(lines + lines2, labels + labels2, loc="upper left")
-
-
-
-```
-
-```{python}
-# | label: fig-bacton-n2o
-# | fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $N_2 O$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
-# | echo: false
-
-reference_fname = "/home/jose/data/TELOPS_UK/N2O_ref_spectra_subsampled"
-matched_filter, clusters = match_filter_image(
-    telops_fname, reference_fname, 10, 4
-)
-fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8, 7))
-axs = axs.flatten()
-
-im = axs[0].imshow(matched_filter, cmap="magma")
-fig.subplots_adjust(right=0.75)
-cbar_ax = fig.add_axes([0.8, 0.55, 0.03, 0.35])
-
-# Add a colorbar to the subplot
-cbar = plt.colorbar(im, cax=cbar_ax)
-axs[0].set_title("N2O matched filter")
-axs[1].plot(params["wv"], params["ref_signal"], "-", lw=2, label="Ref signal")
-ax2 = axs[1].twinx()
-for cluster in range(4):
-    ax2.plot(
-        params["wv"], params["filter"][cluster], "-", label=f"Clust {cluster}"
-    )
-# Add legends to the plot
-lines, labels = axs[1].get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-ax2.legend(lines + lines2, labels + labels2, loc="upper left")
-
-
-```
 
 
 ## Conclusion
