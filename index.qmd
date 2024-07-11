@@ -1,33 +1,21 @@
 ---
-title: La Palma Earthquakes
+title: TELOPSing around
 author:
-  - name: Steve Purves
-    orcid: 0000-0002-0760-5497
-    corresponding: true
-    email: steve@curvenote.com
-    roles:
-      - Investigation
-      - Project administration
-      - Software
-      - Visualization
+  - name: Jose Gómez-Dans
+    orcid: 0000-0003-4787-8307
+    
+    email: jose.gomez-dans@kcl.ac.uk
     affiliations:
-      - Curvenote
-  - name: Rowan Cockett
-    orcid: 0000-0002-7859-8394
-    corresponding: false
-    roles: []
-    affiliations:
-      - Curvenote
+      - King's College London
 keywords:
-  - La Palma
-  - Earthquakes
+  - Farts
+  - Methane
 abstract: |
-  In September 2021, a significant jump in seismic activity on the island of La Palma (Canary Islands, Spain) signaled the start of a volcanic crisis that still continues at the time of writing. Earthquake data is continually collected and published by the Instituto Geográphico Nacional (IGN). ...
+  Fly around with a camera, what could go wrong?
 plain-language-summary: |
-  Earthquake data for the island of La Palma from the September 2021 eruption is found ...
+  Loads of interesting things
 key-points:
-  - A web scraping script was developed to pull data from the Instituto Geogràphico Nacional into a machine-readable form for analysis
-  - Earthquake events on La Palma are consistent with the presence of both mantle and crustal reservoirs.
+  - I'm bored of life
 date: last-modified
 bibliography: references.bib
 citation:
@@ -36,73 +24,133 @@ number-sections: true
 jupyter: python3
 ---
 
-## Introduction
+## Mathced filter theory
 
-```{python}
-import matplotlib.pyplot as plt
-import numpy as np
-eruptions = [1492, 1585, 1646, 1677, 1712, 1949, 1971, 2021]
-```
+I have a data cube as a numpy array called `data`, with dimensions `n_bands, y, x`. I want to write a clean simple function to perform a PCA on `data` along the `n_bands` dimension. I want to report the variance explained by each PC, and be able to select a number of PCs to transform the original data into a compressed space matrix of `n_selected_bands, nx*ny`, which I then want to use as a in input to a simple clustering algorithm. Can you outline the structure of the code, in terms of Python functions with inputs and outputs, but do not yet write any code.
 
-```{python}
-#| label: fig-timeline
-#| fig-cap: Timeline of recent earthquakes on La Palma
-#| fig-alt: An event plot of the years of the last 8 eruptions on La Palma.
 
-plt.figure(figsize=(6, 1))
-plt.eventplot(eruptions, lineoffsets=0, linelengths=0.1, color='black')
-plt.gca().axes.get_yaxis().set_visible(False)
-plt.ylabel('')
-plt.show()
-```
+        
+    
+    
+Now assume I have a signal model that states that the measured radiance can be written as a linear combination of a signal of interest $\vec{b}$, a background term $\vec{u}$ and some clutter $\vec{\epsilon}$:
+$$
+\vec{r}(\lambda) = \alpha\cdot \vec{b} + \vec{u} + \vec{\epsilon}
+$$
 
-```{python}
-#| output: false
-
-avg_years_between_eruptions = np.mean(np.diff(eruptions[:-1]))
-avg_years_between_eruptions
-```
-
-Based on data up to and including 1971, eruptions on La Palma happen every 79.8 years on average.
-
-Studies of the magma systems feeding the volcano, such as @marrero2019, have proposed that there are two main magma reservoirs feeding the Cumbre Vieja volcano; one in the mantle (30-40km depth) which charges and in turn feeds a shallower crustal reservoir (10-20km depth).
-
-Eight eruptions have been recorded since the late 1400s (@fig-timeline).
-
-Data and methods are discussed in @sec-data-methods.
-
-Let $x$ denote the number of eruptions in a year. Then, $x$ can be modeled by a Poisson distribution
+We define a vector $\vec{q}$ that will act as a filter. We define this vector from the assumption of the clutter being Gaussian:
 
 $$
-p(x) = \frac{e^{-\lambda} \lambda^{x}}{x !}
-$$ {#eq-poisson}
+\vec{q} = \frac{\mathbf{C}^{-1}\vec{b}}{\sqrt{\vec{b}^{\top}\mathbf{C}^{-1}\vec{b}}}
+$$
 
-where $\lambda$ is the rate of eruptions per year. Using @eq-poisson, the probability of an eruption in the next $t$ years can be calculated.
+The goal is that given a stack of $N$ observed radiance vectors $R$, the signal of interest $\vec{b}$, and assuming $\vec{u}=\sum_{i=1}^{N}R_i$ and that we can calculate the covariance matrix $\mathbf{C}=\frac{1}{N}\sum_{i=1}^{N}(\vec{R}_i - \vec{u})()(\vec{R}_i - \vec{u})^{\top}$, to estimate the value of $q^{\top}\vec{r}$ for all the elements of the $R$ matrix.
 
-| Name                | Year |
-|---------------------|------|
-| Current             | 2021 |
-| Teneguía            | 1971 |
-| Nambroque           | 1949 |
-| El Charco           | 1712 |
-| Volcán San Antonio  | 1677 |
-| Volcán San Martin   | 1646 |
-| Tajuya near El Paso | 1585 |
-| Montaña Quemada     | 1492 |
+It is also useful to define the signal-to-clutter ratio:
+$$
+\frac{S}{C}=\alpha\sqrt{\vec{q}^{\top}\mathbf{C}^{-1}\vec{b}}
+$$
 
-: Recent historic eruptions on La Palma {#tbl-history}
+## Implementation
 
-@tbl-history summarises the eruptions recorded since the colonization of the islands by Europeans in the late 1400s.
+From the previous discussion, it appears that we only need a handful of things
+to calculate this filter: the reference spectrum of the species we're after,
+an idea of the background and estimates of the inverse covariance of the noise
+and clutter signals. We assume that we can calculate the reference signal using
+Radis or HITRAN or whatever. The background can just be mean value of the measured
+spectra, and we can guesstimate the inverse covariance using the centred radiance data.
 
-![Map of La Palma](images/la-palma-map.png){#fig-map}
+It appears that a reasonable way to do this is to initially cluster the acquired radiance 
+image and to calculate the filter coefficients for each cluster. The assumption is that the
+clusters will relate to regions with a common behaviour in terms of temperatures, emmissivities
+and so on.
 
-La Palma is one of the west most islands in the Volcanic Archipelago of the Canary Islands (@fig-map).
+### Clustering
 
-{{< embed notebooks/data-screening.qmd#fig-spatial-plot >}}
+The clustering method you use is arbitrary, but given that the data collected has
+around 90 spectral bands, it's probably a good idea to use a PCA to reduce the dimensionality
+and thus avoid the *curse of dimensionality* which is a sad fact of life. 
 
-@fig-spatial-plot shows the location of recent Earthquakes on La Palma.
+## Example
 
-## Data & Methods {#sec-data-methods}
+Let's see a random illustration with one file from Bacton, with an example for methane (@fig-bacton-ch4). The results for the filter are heavily dependent on the cluster that's been used to estimate the background covariance matrix. The filter shape is also quite random, and I don't really know whether this is due to scaling of the $\vec{b}$ signal or something else?
+
+I have done the same with the $N_2 O$ reference spectrum in @fig-bacton-n2o, and the results are also fairly similar and equally puzzling....
+
+
+```{python}
+# | label: fig-bacton-ch4
+# | fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $CH_4$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
+# | echo: false
+
+from matched_filter import match_filter_image
+import matplotlib.pyplot as plt
+
+telops_fname = (
+    "/home/jose/data/TELOPS_UK/"
+    + "2_Bacton_M_1200/2_Bacton_M_1200_Data_20240625_122135513.radiance.sc"
+)
+reference_fname = "/home/jose/data/TELOPS_UK/CH4_ref_spectra_subsampled.csv"
+matched_filter, clusters, params = match_filter_image(
+    telops_fname, reference_fname, 10, 4, retval_all=True
+)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8, 7))
+axs = axs.flatten()
+
+im = axs[0].imshow(matched_filter, cmap="magma")
+fig.subplots_adjust(right=0.75)
+cbar_ax = fig.add_axes([0.8, 0.55, 0.03, 0.35])
+
+# Add a colorbar to the subplot
+cbar = plt.colorbar(im, cax=cbar_ax)
+axs[0].set_title("CH4 matched filter")
+axs[1].plot(params["wv"], params["ref_signal"], "-", lw=2, label="Ref signal")
+ax2 = axs[1].twinx()
+for cluster in range(4):
+    ax2.plot(
+        params["wv"], params["filter"][cluster], "-", label=f"Clust {cluster}"
+    )
+# Add legends to the plot
+lines, labels = axs[1].get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc="upper left")
+
+
+
+```
+
+```{python}
+# | label: fig-bacton-n2o
+# | fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $N_2 O$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
+# | echo: false
+
+reference_fname = "/home/jose/data/TELOPS_UK/N2O_ref_spectra_subsampled"
+matched_filter, clusters = match_filter_image(
+    telops_fname, reference_fname, 10, 4
+)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8, 7))
+axs = axs.flatten()
+
+im = axs[0].imshow(matched_filter, cmap="magma")
+fig.subplots_adjust(right=0.75)
+cbar_ax = fig.add_axes([0.8, 0.55, 0.03, 0.35])
+
+# Add a colorbar to the subplot
+cbar = plt.colorbar(im, cax=cbar_ax)
+axs[0].set_title("N2O matched filter")
+axs[1].plot(params["wv"], params["ref_signal"], "-", lw=2, label="Ref signal")
+ax2 = axs[1].twinx()
+for cluster in range(4):
+    ax2.plot(
+        params["wv"], params["filter"][cluster], "-", label=f"Clust {cluster}"
+    )
+# Add legends to the plot
+lines, labels = axs[1].get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc="upper left")
+
+
+```
+
 
 ## Conclusion
 
