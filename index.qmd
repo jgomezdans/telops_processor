@@ -78,7 +78,7 @@ I have done the same with the $N_2 O$ reference spectrum in @fig-bacton-n2o, and
 
 {{< embed notebooks/inversion_plots.qmd#fig-bacton-ch4 >}}
 
-{{< embed notebooks/inversion_plots.qmd#fig-baction-n20 >}}
+{{< embed notebooks/inversion_plots.qmd#fig-bacton-n2o >}}
 
 
 

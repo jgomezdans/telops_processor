@@ -15,9 +15,10 @@ import matplotlib.pyplot as plt
 
 
 ```{python}
-# | label: fig-bacton-ch4
-# | fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $CH_4$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
-# | output: false
+#| label: fig-bacton-ch4
+
+#| fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $CH_4$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
+#| output: false
 
 
 telops_fname = (
@@ -55,9 +56,9 @@ ax2.legend(lines + lines2, labels + labels2, loc="upper left")
 
 
 ```{python}
-# | label: fig-bacton-n2o
-# | fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $N_2 O$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
-# | output: false
+#| label: fig-bacton-n2o
+#| fig-cap: "(Top) Result of applying a matched filter to the an image of Bacton and searching for a $N_2 O$ spectrum. (Bottom) The reference $CH_4$ spectrum and the different filter weights calculated for each cluster."
+#| output: false
 
 reference_fname = "/home/jose/data/TELOPS_UK/N2O_ref_spectra_subsampled"
 matched_filter, clusters = match_filter_image(
